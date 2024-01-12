@@ -5,9 +5,16 @@ import { Link } from "react-router-dom";
 const Home = () => {
 
     const[products, setProducts] = useState(null);
+    const[categories, setCategories] =useState(null);
+
+    const[name, setName] = useState(null);
+    const[price, setPrice] = useState(null);
+    const[qty, setQty] = useState(0);
+    const[categoryId, setcategoryId] = useState(null);
 
     useEffect(() => {
         getProducts();
+        getCategories();
     },[])
 
     const getProducts = () => {
@@ -21,8 +28,86 @@ const Home = () => {
         })
     }
 
+    const getCategories = () => {
+        fetch("http://localhost:8080/categories")
+        .then((response) => {
+            return response.json();
+        }).then((data) => {
+            setCategories(data);
+        }).catch((error) => {
+            console.log(error);
+        })
+    }
+
+    const handleName = (event) => {
+        setName(event.target.value);
+    }
+
+    const handlePrice = (event) => {
+        setPrice(event.target.value);
+    }
+
+    const handleQty = (event) =>{
+        setQty(event.target.value);
+    }
+
+    const handleCategory = (event) => {
+        setcategoryId(event.target.value);
+    }
+
+    const handleSubmit = (event) => {
+        event.preventDefault();
+
+        const data = {
+            "name": name,
+            "price": price,
+            "qty": qty,
+            "categoryId": categoryId
+        }
+
+        fetch("http://localhost:8080/products", {
+            method: 'POST',
+            headers:{
+                'Accept':'application/json',
+                'Content-Type':'application/json'
+            },
+            body:JSON.stringify(data)
+        }).then((response) => {
+            return response.json();
+        }).then((data) => {
+            setProducts([...products,data]);
+            setName(null);
+            setPrice(null);
+            setQty(null);
+            setcategoryId(null);
+            
+            console.log(products)
+        }).catch((error) => {
+            console.log(error);
+        })
+    }
+
     return (
         <>
+
+            <nav class="navbar navbar-expand-lg bg-body-tertiary">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">Navbar</a>
+                <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+                <ul class="navbar-nav">
+                    {categories && categories.map((category) => (
+                       <li class="nav-item">
+                            <Link to={`/categories/${category.id}`} className="nav-link">{category.name}</Link>
+                        </li> 
+                    ))}
+                    
+                </ul>
+                </div>
+            </div>
+            </nav>
+
+
+
             <h1>Home</h1>
 
             <ul>
@@ -40,6 +125,34 @@ const Home = () => {
                     </li>
                 ))}
             </ol>
+
+            <form onSubmit={handleSubmit}>
+                <div>
+                    <label>Product Name</label>
+                    <input type="text" required onChange={handleName} value={name} />
+                </div>
+                <div>
+                    <label>Product Price</label>
+                    <input type="text" required onChange={handlePrice} value={price} />
+                </div>
+                <div>
+                    <label>Product Qty</label>
+                    <input type="text" required onChange={handleQty} value={qty} />
+                </div>
+                <div>
+                    <label>Category</label>
+                    <select required onChange={handleCategory}>
+                        <option>Plese Select</option>
+
+                        {categories && categories.map((category) => (
+                            <option key={category.id} value={category.id}>{category.name}</option>
+                        ))}
+
+                    </select>
+                </div>
+
+                <button className="btn btn-primary" type="submit">Save Product</button>
+            </form>
         </>
     )
 }
