@@ -1,5 +1,6 @@
+import axios from "axios";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 
 const Home = () => {
@@ -17,26 +18,32 @@ const Home = () => {
         getCategories();
     },[])
 
-    const getProducts = () => {
-        fetch("http://localhost:8080/products")
-        .then((response) => {
-            return response.json();
-        }).then((data) => {
-            setProducts(data);
-        }).catch((error) => {
-            console.log(error);
-        })
+    const navigate = useNavigate();
+
+    const getProducts = async () => {
+
+        try{
+            const response = await axios.get("http://localhost:8080/products");
+            setProducts(response.data);  
+        } catch (error) {
+            if(error.response.status === 401) {
+                navigate("/login");
+            }
+        }
+
     }
 
-    const getCategories = () => {
-        fetch("http://localhost:8080/categories")
-        .then((response) => {
-            return response.json();
-        }).then((data) => {
-            setCategories(data);
-        }).catch((error) => {
-            console.log(error);
-        })
+    const getCategories = async () => {
+
+        try {
+            const response = await axios.get("http://localhost:8080/categories");
+            setCategories(response.data);
+        } catch (error) {
+            if(error.response.status === 401) {
+                navigate("/login");
+            }
+        }
+
     }
 
     const handleName = (event) => {
@@ -87,6 +94,11 @@ const Home = () => {
         })
     }
 
+    const handleLogout = () => {
+        localStorage.removeItem("token");
+        navigate("/login");
+    }
+
     return (
         <>
 
@@ -100,6 +112,10 @@ const Home = () => {
                             <Link to={`/categories/${category.id}`} className="nav-link">{category.name}</Link>
                         </li> 
                     ))}
+
+                    <li class="nav-item">
+                        <button className="btn btn-secondary" onClick={handleLogout}>Logout</button>
+                    </li>
                     
                 </ul>
                 </div>
